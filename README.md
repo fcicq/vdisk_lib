@@ -7,6 +7,7 @@ Released under MIT License.
 
 Experimental. feel free to report problems on github. Fork is encouraged! :)
 
+```
 usage: vdisk.py [-h] [-u USER] [-p PASS] [--traverse] [--vdiskuser]
                 [--path PATH] [--fid FID] [--ls] [--quota] [--upload]
                 [--secretshare] [--getinfo]
@@ -31,3 +32,4 @@ optional arguments:
   --upload              Upload file to vdisk
   --secretshare         Get secret sharing link
   --getinfo             Get file info (with direct download link)
+```
