@@ -317,7 +317,7 @@ def upload_bigfile(token, filename, remote_filename=None, path=None, dir_id=0, s
     md5sum, sha1sum = filemd5sha1(fp)
   except OSError, e:
     return {'errcode': 9999, 'err_msg': 'file error: ' + str(e)}
-  print 'File: %s\nMD5 : %s\nSHA1: %s\nSize: %d' % (to_console(remote_name), md5sum, sha1sum, filesize)
+  print 'File: %s\nMD5 : %s\nSHA1: %s\nSize: %d' % (to_console(remote_filename), md5sum, sha1sum, filesize)
   rpc = vdiskrpc()
 
   # upload by sha1.
