@@ -249,7 +249,7 @@ def continue_upload(token, upload_key, fp, remote_filename, filesize, part_numbe
         raise
       except Exception, e:
         print str(e)
-      print 'part upload temporarily failed ... (tried: %d)' % upload_tries + 1
+      print 'part upload temporarily failed ... (tried: %d)' % (upload_tries + 1)
     if not resultmd5:
       return {'errcode': 9999, 'err_msg': 'part upload failed, resume: ' + cmdline}
     # time tick here
