@@ -3,6 +3,8 @@ vdisk_lib
 
 vdisk.me (vdisk.weibo.com) api &amp; client implementation in Python
 
+Released under MIT License.
+
 Experimental. feel free to report problems on github. Fork is encouraged! :)
 
 usage: vdisk.py [-h] [-u USER] [-p PASS] [--traverse] [--vdiskuser]
