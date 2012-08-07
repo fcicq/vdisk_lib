@@ -33,3 +33,12 @@ optional arguments:
   --secretshare         Get secret sharing link
   --getinfo             Get file info (with direct download link)
 ```
+
+```Example Usage:
+-u EMAIL -p "PASSWORD" --upload file1 file2 file3 ...
+-u EMAIL -p "PASSWORD" --ls
+-u EMAIL -p "PASSWORD" --ls --path DIRECTORY
+-u EMAIL -p "PASSWORD" --quota
+-u EMAIL -p "PASSWORD" --fid FID --getinfo
+-u EMAIL -p "PASSWORD" --fid FID --secretshare
+```
