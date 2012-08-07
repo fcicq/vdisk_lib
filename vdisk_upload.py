@@ -237,7 +237,7 @@ def continue_upload(token, upload_key, fp, remote_filename, filesize, part_numbe
     # time tick here
     timedata = timetick(timedata, range_left - 1)
     curtime_str = time.strftime("[%H:%M:%S]")
-    print '%s Uploading Part %d / %d (%.2f %%), Speed %s' % (curtime_str, current_part, parts, float(range_left / filesize), speed_humanreadable(getspeed(timedata)))
+    print '%s Uploading Part %d / %d (%.2f %%), Speed %s' % (curtime_str, current_part, parts, float(range_left) / filesize * 100.0, speed_humanreadable(getspeed(timedata)))
     uri = 'http://' + VDISK_S3HOST + uripart
     for upload_tries in range(UPLOAD_RETRIES):
       resultmd5 = None
