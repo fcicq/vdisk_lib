@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 VDISK_LIB_VERSION = '0.1'
 AVAILABLE_ACTIONS = {'upload': 'Upload file to vdisk',
