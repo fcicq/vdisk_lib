@@ -34,7 +34,8 @@ optional arguments:
   --getinfo             Get file info (with direct download link)
 ```
 
-```Example Usage:
+```
+Example Usage:
 -u EMAIL -p "PASSWORD" --upload file1 file2 file3 ...
 -u EMAIL -p "PASSWORD" --ls
 -u EMAIL -p "PASSWORD" --ls --path DIRECTORY
