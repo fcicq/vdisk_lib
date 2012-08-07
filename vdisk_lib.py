@@ -3,8 +3,8 @@ from fetch_httplib import fetch_response, fetch_httplib as fetch
 import hmac, hashlib, time, urllib, json
 VDISK_APIBASE = 'http://openapi.vdisk.me/'
 VDISK_S3HOST = 'up-tj.sinastorage.com' 
-VDISK_APPKEY = 199631 # 2750066530
-VDISK_SECRET = {199631: 'f1d101270aa97ee55c6962d42d252eb9', 2750066530: 'd859f00d266b8180fbf28162fc9bfd1d'}
+VDISK_APPKEY = 2750066530
+VDISK_SECRET = {2750066530: 'd859f00d266b8180fbf28162fc9bfd1d'}
 VDISK_REQUIRE_LOGIN = ['token']
 VDISK_REQUIRE_FID = ['fid', 'token']
 VDISK_REQUIRE_DIR = ['dir_id', 'token']
