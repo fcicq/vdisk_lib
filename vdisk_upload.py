@@ -268,14 +268,18 @@ def continue_upload(token, upload_key, fp, remote_filename, filesize, part_numbe
 
   md5s = ','.join(md5list.values())
   for i in range(RPC_RETRIES):
-    result = rpc.big_file_upload_merge(token=token, upload_key=upload_key, file_name=remote_filename, 
+    try:
+      result = rpc.big_file_upload_merge(token=token, upload_key=upload_key, file_name=remote_filename, 
                             dir_id=dir_id, md5=md5sum, md5s=md5s) # force is filled by library
-    fid = rpc.getdata(result, 'fid')
-    if isinstance(fid, dict):
-      print 'looks failed? retry...'
-      continue
-    print 'Merge OK, fid: ', fid
-    return {'errcode': 0, 'fid': fid}
+      fid = rpc.getdata(result, 'fid')
+      if isinstance(fid, dict):
+        print 'looks failed? retry...'
+        continue
+      print 'Merge OK, fid: ', fid
+      return {'errcode': 0, 'fid': fid}
+    except KeyboardInterrupt:
+      return {'errcode': 9999, 'err_msg': 'interrupted by keyboard, resume: ' + cmdline}      
+
   return {'errcode': 9999, 'err_msg': 'Merger failed, retry with: ' + cmdline}
 
 def upload_resume(token, filename, upload_key, part_number, split_size=DEFAULT_SPLITSIZE, remote_filename=None, dir_id=0, md5sum=None):
