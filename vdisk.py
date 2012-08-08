@@ -62,6 +62,9 @@ if __name__ == '__main__':
   if argdict['upload']:
     for i in argdict['files']:
       fid = vdisk.upload_bigfile(token, i, dir_id=dir_id)
+      if isinstance(fid, dict):
+        if not fid.get('fid', None):
+          print 'Upload Failed, errmsg: ', fid.get('err_msg', '-')
 
   if argdict['quota']:
     data = rpc.get_quota(token=token)
