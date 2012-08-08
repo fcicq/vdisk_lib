@@ -2,7 +2,11 @@
 from fetch_httplib import fetch_httplib as fetch
 from vdisk_lib import vdiskrpc, VDISK_S3HOST
 
+# Please delete resumedata file after changing this value
+# It is recommended to make one part transfer about 10 to 30 sec, due to TCP.
+# Recommended value: 1M for most users, 16M for high upload bandwidth (> 10 Mbits/s) users.
 DEFAULT_SPLITSIZE = 1048576
+
 HASH_BLOCKSIZE = 65536
 RPC_RETRIES = 3
 UPLOAD_RETRIES = 3
