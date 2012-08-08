@@ -121,7 +121,9 @@ def vdisk_mkdir(token, path):
 
 WIN32_ENCODING='gbk' # FIXME: how to get the encoding?
 def to_utf8(name):
-  if sys.platform == 'win32': 
+  if isinstance(name, unicode):
+    return name.encode('utf-8')
+  if sys.platform == 'win32': # Non-unicode
     return unicode(name, WIN32_ENCODING).encode('utf-8')
   return name
 
@@ -184,6 +186,7 @@ def timetick(data, pos): # record time & current pos to calculate speed
   return data
 
 def getspeed(data): # in bytes per sec
+  if not data: return 0 # None
   if len(data) < 2: return 0
   l, r = data[0], data[-1]
   return int((float(r[1] - l[1]) / (time.time() - l[0] + 0.0000001)))
