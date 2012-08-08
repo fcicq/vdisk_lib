@@ -166,7 +166,7 @@ class vdiskrpc(RunBase):
     if field in data: return data.get(field)
     subdata = data.get('data', {})
     if field in subdata: return subdata.get(field)
-    return {'errcode': 9999, 'err_msg': 'extract data failed'}
+    return data
 
   def run(self, name, **kwargs):
     cb = kwargs.pop('callback', None)

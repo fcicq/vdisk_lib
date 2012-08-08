@@ -200,36 +200,46 @@ def speed_humanreadable(speed):
 # TODO: package as a class, for upload
 import tempfile
 import pickle
-def tempfile_open():
+def tempfile_open(readonly=True):
   try:
-    f = tempfile.mkstemp('vdisk-resume-data')
-  except OSError:
-    print 'Load resume data failed'
+    fd = file('temp-vdisk-resumedata.pickle.tmp', readonly and 'rb' or 'wb')
+  except IOError:
     return None
-  return f
-  
-def save_resumedata(token, upload_key, part_number, md5sum):
-  f = tempfile_open()
+  except OSError:
+    return None
+  return fd
+
+def tempfile_read():
+  f = tempfile_open(True)
   if not f: return
   try:
-    data = dict(pickle.load(f))
+    data = pickle.load(f)
   except:
-    data = {}
+    data = None
+  finally:
+    f.close()
+  return data
+
+def tempfile_save(data):
+  f = tempfile_open(False)
+  if not f: return
+  try:
+    pickle.dump(data, f, 2)
+  except:
+    print 'Save Resume File Failed'
+  finally:
+    f.close()
+
+def save_resumedata(token, upload_key, part_number, md5sum):
+  data = tempfile_read()
   if not isinstance(data, dict): data = {}
   d = {'t': token, 'u': upload_key, 'p': part_number}
   data[md5sum] = d
-  pickle.dump(data, f, 2)
-  f.close()
+  tempfile_save(data)
 
 def load_resumedata(md5sum):
-  f = tempfile_open()
-  if not f: return
-  try:
-    data = dict(pickle.load(f))
-  except:
-    data = {}
-  finally:
-    f.close()
+  data = tempfile_read()
+  if not isinstance(data, dict): data = {}
   d = data.get(md5sum, None)
   if d:
     return {'token': d.get('t', None), 'upload_key': d.get('u', None),
@@ -237,15 +247,10 @@ def load_resumedata(md5sum):
   return None
 
 def clear_resumedata(md5sum):
-  f = tempfile_open()
-  if not f: return
-  try:
-    data = dict(pickle.load(f))
-  except:
-    data = {}
+  data = tempfile_read()
+  if not isinstance(data, dict): data = {}
   d = data.pop(md5sum, None)
-  pickle.dump(data, f, 2)
-  f.close()
+  tempfile_save(data)
 
 # Long term TODO: out of order upload? add a upload_state (rather than part_number)? failed_parts?
 # but we have to duplicate fd first, or have to prefetch the data...
