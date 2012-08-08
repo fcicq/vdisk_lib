@@ -198,14 +198,54 @@ def speed_humanreadable(speed):
   return '%.2f MB/s' % (speed / 1048576.0)
 
 # TODO: package as a class, for upload
-# TODO: use a file to save resume data?
-# FIXME...
-def generate_resume_cmdline(token, upload_key, part_number, dir_id, md5sum):
-  # save resume data by md5sum
-  return str(locals())
+import tempfile
+import pickle
+def tempfile_open():
+  try:
+    f = tempfile.mkstemp('vdisk-resume-data')
+  except OSError:
+    print 'Load resume data failed'
+    return None
+  return f
+  
+def save_resumedata(token, upload_key, part_number, md5sum):
+  f = tempfile_open()
+  if not f: return
+  try:
+    data = dict(pickle.load(f))
+  except:
+    data = {}
+  if not isinstance(data, dict): data = {}
+  d = {'t': token, 'u': upload_key, 'p': part_number}
+  data[md5sum] = d
+  pickle.dump(data, f, 2)
+  f.close()
 
-#def delete_resume_data(md5sum):
-#  pass
+def load_resumedata(md5sum):
+  f = tempfile_open()
+  if not f: return
+  try:
+    data = dict(pickle.load(f))
+  except:
+    data = {}
+  finally:
+    f.close()
+  d = data.get(md5sum, None)
+  if d:
+    return {'token': d.get('t', None), 'upload_key': d.get('u', None),
+	'part_number': d.get('p', None)}
+  return None
+
+def clear_resumedata(md5sum):
+  f = tempfile_open()
+  if not f: return
+  try:
+    data = dict(pickle.load(f))
+  except:
+    data = {}
+  d = data.pop(md5sum, None)
+  pickle.dump(data, f, 2)
+  f.close()
 
 # Long term TODO: out of order upload? add a upload_state (rather than part_number)? failed_parts?
 # but we have to duplicate fd first, or have to prefetch the data...
@@ -222,7 +262,7 @@ def continue_upload(token, upload_key, fp, remote_filename, filesize, part_numbe
   ranges = rangesplit(filesize, split_size)
   parts = len(ranges)
   for i in range(parts):
-    cmdline = generate_resume_cmdline(token, upload_key, i, dir_id, md5sum)
+    save_resumedata(token, upload_key, i, md5sum)
     range_left, range_right = ranges[i][0], ranges[i][1]
     fp.limitrange(range_left, range_right)
     current_part = i+1
@@ -238,7 +278,7 @@ def continue_upload(token, upload_key, fp, remote_filename, filesize, part_numbe
       uripart = rpc.big_file_upload_part(token=token, upload_key=upload_key, part_number=current_part, field='URI')
       if not isinstance(uripart, dict): break
     if isinstance(uripart, dict):
-      return {'errcode': 9999, 'err_msg': 'upload RPC failed, resume: ' + cmdline}
+      return {'errcode': 9999, 'err_msg': 'upload RPC failed, please retry'}
 
     # time tick here
     timedata = timetick(timedata, range_left - 1)
@@ -251,13 +291,13 @@ def continue_upload(token, upload_key, fp, remote_filename, filesize, part_numbe
         resultmd5 = vdisk_uploads3_put(fp, range_left, range_right, uri) # headers?
         if resultmd5: break
       except KeyboardInterrupt:
-        print 'user cancelled, continue cmdline: ' + cmdline
+        print 'user cancelled'
         raise
       except Exception, e:
         print str(e)
       print 'part upload temporarily failed ... (tried: %d)' % (upload_tries + 1)
     if not resultmd5:
-      return {'errcode': 9999, 'err_msg': 'part upload failed, resume: ' + cmdline}
+      return {'errcode': 9999, 'err_msg': 'part upload failed, please retry'}
     # time tick here
     timedata = timetick(timedata, range_right)
     # part upload ok :)
@@ -268,7 +308,7 @@ def continue_upload(token, upload_key, fp, remote_filename, filesize, part_numbe
   print 'Now Merging ...'
 
   # finally merge!
-  cmdline = generate_resume_cmdline(token, upload_key, current_part, dir_id, md5sum)
+  save_resumedata(token, upload_key, current_part, md5sum)
   if not len(md5list) == len(ranges):
     return {'errcode': 9999, 'err_msg': 'ranges not matched'}
 
@@ -282,24 +322,12 @@ def continue_upload(token, upload_key, fp, remote_filename, filesize, part_numbe
         print 'looks failed? retry...'
         continue
       print 'Merge OK, fid: ', fid
+      clear_resumedata(md5sum)
       return {'errcode': 0, 'fid': fid}
     except KeyboardInterrupt:
       return {'errcode': 9999, 'err_msg': 'interrupted by keyboard, resume: ' + cmdline}      
 
   return {'errcode': 9999, 'err_msg': 'Merger failed, retry with: ' + cmdline}
-
-def upload_resume(token, filename, upload_key, part_number, split_size=DEFAULT_SPLITSIZE, remote_filename=None, dir_id=0, md5sum=None):
-  # remote filename
-  remote_filename = get_remote_filename(filename, remote_filename)
-  try:
-    # get filesize, 0 & return
-    filesize = os.path.getsize(filename)
-    if filesize == 0: return {'errcode': 9999, 'err_msg': 'filesize is 0'}
-    fp = RangeFile(filename, 'rb')
-  except OSError, e:
-    return {'errcode': 9999, 'err_msg': 'file error: ' + str(e)}
-  print 'Resuming File: %s' % (to_console(remote_filename))
-  return continue_upload(token, upload_key, fp, remote_filename, filesize, part_number, split_size, dir_id, md5sum)
 
 # actually only sha1 & path parsing is added in this func,
 # and this func does the upload_key request.
@@ -331,13 +359,25 @@ def upload_bigfile(token, filename, remote_filename=None, path=None, dir_id=0, s
   rpc = vdiskrpc()
 
   # upload by sha1.
-  match_result = rpc.upload_with_sha1(token=token, sha1=sha1sum, dir_id=dir_id, file_name=remote_filename, field='fid')
-  if not isinstance(match_result, dict):
+  for rpc_tries in range(RPC_RETRIES):
+    match_result = rpc.upload_with_sha1(token=token, sha1=sha1sum, dir_id=dir_id, file_name=remote_filename, field='fid')
+    if not isinstance(match_result, dict):
     # successed!
-    print 'Matched by SHA1, fid: ', match_result
-    return {'errcode': 0, 'fid': match_result}
+      print 'Matched by SHA1, fid: ', match_result
+      return {'errcode': 0, 'fid': match_result}
+    elif match_result.get('errcode') == 1: # Not found
+      break
 
   # TODO: read the resume data by md5sum, remove upload_resume function
+  resumedata = load_resumedata(md5sum)
+  # (token, upload_key, current_part)
+  if resumedata:
+    return continue_upload(resumedata.get('token'), 
+				resumedata.get('upload_key'),
+				fp, remote_filename, filesize,
+				resumedata.get('part_number'),
+				split_size, dir_id, md5sum)
+
 
   # s3host will be filled by the library
   for rpc_retries in range(RPC_RETRIES):
