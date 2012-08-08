@@ -128,7 +128,10 @@ def to_utf8(name):
 def to_console(name):
   if sys.platform == 'win32': 
     try:
-      return unicode(name, 'utf-8').encode(WIN32_ENCODING)
+      if isinstance(name, unicode):
+        return name.encode(WIN32_ENCODING)
+      else:
+        return unicode(name, 'utf-8').encode(WIN32_ENCODING)
     except UnicodeDecodeError:
       return '---DECODE_FAILED---'
   return name
