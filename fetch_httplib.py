@@ -40,12 +40,11 @@ def fetch_httplib(uri, headers=None, postdata=None, options=None):
     response = fetch_response(resp.status, body=resp.read(), headers=dict(resp.getheaders()))
   except KeyboardInterrupt:
     raise
-  except httplib.HTTPException, e:
+  #except httplib.HTTPException, e:
+  #  return fetch_response(504, error=CustomHTTPException(str(e)))
+  #except socket.timeout, e:
+  except Exception, e:
     return fetch_response(504, error=CustomHTTPException(str(e)))
-  except socket.timeout, e:
-    return fetch_response(504, error=CustomHTTPException(str(e)))
-  except Exception:
-    raise
   finally:
     if conn:
       conn.close()
