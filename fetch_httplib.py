@@ -1,3 +1,4 @@
+import socket
 import httplib
 from urllib import splittype, splithost
 
@@ -40,6 +41,8 @@ def fetch_httplib(uri, headers=None, postdata=None, options=None):
   except KeyboardInterrupt:
     raise
   except httplib.HTTPException, e:
+    return fetch_response(504, error=CustomHTTPException(str(e)))
+  except socket.timeout, e:
     return fetch_response(504, error=CustomHTTPException(str(e)))
   except Exception:
     raise
