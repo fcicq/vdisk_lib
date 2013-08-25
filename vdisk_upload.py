@@ -4,8 +4,8 @@ from vdisk_lib import vdiskrpc, VDISK_S3HOST
 
 # Please delete resumedata file after changing this value
 # It is recommended to make one part transfer about 10 to 30 sec, due to TCP.
-# Recommended value: 1M for most users, 16M for high upload bandwidth (> 10 Mbits/s) users.
-DEFAULT_SPLITSIZE = 1048576
+# Recommended value: 4M for most users, 16M for high upload bandwidth (> 10 Mbits/s) users.
+DEFAULT_SPLITSIZE = 1048576 * 4
 
 HASH_BLOCKSIZE = 65536
 RPC_RETRIES = 3
@@ -271,7 +271,7 @@ def continue_upload(token, upload_key, fp, remote_filename, filesize, part_numbe
   ranges = rangesplit(filesize, split_size)
   parts = len(ranges)
   for i in range(parts):
-    save_resumedata(token, upload_key, i, md5sum)
+    if i >= part_number: save_resumedata(token, upload_key, i, md5sum)
     range_left, range_right = ranges[i][0], ranges[i][1]
     fp.limitrange(range_left, range_right)
     current_part = i+1
