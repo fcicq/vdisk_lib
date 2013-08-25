@@ -1,8 +1,12 @@
-import socket
+try:
+  from gevent import socket
+except ImportError:
+  print('fallback to typical socket')
+  import socket
 import httplib
 from urllib import splittype, splithost
 
-DEFAULT_TIMEOUT = 10
+DEFAULT_TIMEOUT = None
 
 class CustomHTTPException(Exception):
   pass
